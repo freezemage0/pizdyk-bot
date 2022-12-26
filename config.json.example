@@ -1,0 +1,16 @@
+{
+  "ruleset": [],
+  "ignoredUsers": [],
+  "credentials": {
+    "communityToken": "string",
+    "communityId": integer
+  },
+  "api": {
+    "baseUri": "https://api.vk.com/method/",
+    "version": "5.131",
+    "maxLongPollAttempts": 5
+  },
+  "assets": {
+    "generic": []
+  }
+}

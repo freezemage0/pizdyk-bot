@@ -1,0 +1,20 @@
+{
+  "name": "freezemage0/pizdyk",
+  "description": "Бот вконтакте, раздающий пиздыки за запрещёнку.",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Freezemage",
+      "email": "freezemage0@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Freezemage\\Pizdyk\\": "lib/"
+    }
+  },
+  "require": {
+    "guzzlehttp/guzzle": "^7.5.0"
+  }
+}
