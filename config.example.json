@@ -3,7 +3,7 @@
   "ignoredUsers": [],
   "credentials": {
     "communityToken": "string",
-    "communityId": integer
+    "communityId": "integer"
   },
   "api": {
     "baseUri": "https://api.vk.com/method/",
