@@ -3,6 +3,8 @@
 
 namespace Freezemage\Pizdyk\Vk\LongPoll;
 
+use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection;
+use Freezemage\Pizdyk\Vk\LongPoll\Event\Factory as EventFactory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
@@ -11,22 +13,24 @@ use RuntimeException;
 
 final class Client
 {
-    private const DIRECTION_IN = 0;
     private ClientInterface $client;
     private RequestFactoryInterface $requestFactory;
     private UriFactoryInterface $uriFactory;
+    private EventFactory $eventFactory;
 
     public function __construct(
             ClientInterface $client,
             RequestFactoryInterface $requestFactory,
-            UriFactoryInterface $uriFactory
+            UriFactoryInterface $uriFactory,
+            EventFactory $eventFactory
     ) {
         $this->client = $client;
         $this->requestFactory = $requestFactory;
         $this->uriFactory = $uriFactory;
+        $this->eventFactory = $eventFactory;
     }
 
-    public function fetch(Connection $connection, int $wait = 25, int $mode = 2, int $version = 3): array
+    public function fetch(Connection $connection, int $wait = 25, int $mode = 2, int $version = 3): Collection
     {
         $uri = $this->uriFactory->createUri($connection->server);
         $parameters = [
@@ -52,21 +56,12 @@ final class Client
             throw new RuntimeException('Long poll failed, create another connection and retry.');
         }
 
-        $candidates = [];
+        $collection = new Collection();
 
         foreach ($body['updates'] as $update) {
-            if ($update['type'] != 'message_new') {
-                continue; // drop any event that is not "message_new"
-            }
-
-            $message = $update['object']['message'];
-            if ($message['out'] != Client::DIRECTION_IN) {
-                continue; // drop all non-incoming messages
-            }
-
-            $candidates[] = $message;
+            $collection->push($this->eventFactory->create($update['type'], $update['event_id'], $update['v'], $update['object']));
         }
 
-        return $candidates;
+        return $collection;
     }
 }

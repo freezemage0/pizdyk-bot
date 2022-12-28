@@ -3,10 +3,8 @@
 
 namespace Freezemage\Pizdyk\Vk\LongPoll;
 
-use Exception;
 use Freezemage\Pizdyk\Configuration;
-use Freezemage\Pizdyk\Vk\Message\Collection;
-use Freezemage\Pizdyk\Vk\Message\Collection as MessageCollection;
+use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection;
 use Freezemage\Pizdyk\Vk\Message\Item;
 use RuntimeException;
 
@@ -26,28 +24,22 @@ final class Listener
         $this->lpClient = $lpClient;
     }
 
-    public function listen(): MessageCollection
+    public function listen(): Collection
     {
-        if ($this->attempts > $this->configuration->getApi()->getMaxLongPollAttempts()) {
-            throw new Exception('Long poll server is unavailable, shutting down...'); // todo: custom exception
+        if ($this->attempts > $this->configuration->getApi()->maxLongPollAttempts) {
+            throw new LongPollAttemptsExceededException('Long poll server is unavailable, shutting down...');
         }
 
-        $collection = new Collection();
-
-        $connection = $this->getConnection();
         try {
-            $messages = $this->lpClient->fetch($connection);
+            $connection = $this->getConnection();
+            return $this->lpClient->fetch($connection);
         } catch (RuntimeException $e) {
             unset($this->connection);
             $this->attempts += 1;
-            return $collection;
+
+            return $this->listen();
         }
 
-        foreach ($messages as $message) {
-            $collection->push(new Item($message['peer_id'], $message['from_id'], $message['text']));
-        }
-
-        return $collection;
     }
 
     private function getConnection(): Connection

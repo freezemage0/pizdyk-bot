@@ -3,18 +3,17 @@
 
 namespace Freezemage\Pizdyk;
 
-use Freezemage\Pizdyk\Observer\Censorship;
+use Freezemage\Pizdyk\Output\Responder;
+use Freezemage\Pizdyk\Output\Response\Collection as ResponseCollection;
 use Freezemage\Pizdyk\Vk\LongPoll\Listener;
-use Freezemage\Pizdyk\Vk\Message\Collection;
-use Freezemage\Pizdyk\Vk\Message\Item;
 use Freezemage\Pizdyk\Vk\Message\Service;
 
 
 final class Engine
 {
-    private const COOLDOWN = 250000;
+    private const DELAY = 250000;
     private Listener $server;
-    /** @var array<Observer> */
+    /** @var array<ObserverInterface> */
     private array $observers;
     private Service $messageService;
 
@@ -24,27 +23,26 @@ final class Engine
         $this->messageService = $messageService;
     }
 
-    public function attach(Observer $observer): void
+    public function attach(ObserverInterface $observer): void
     {
         $this->observers[] = $observer;
     }
 
     public function run(): void
     {
+        $responder = new Responder($this->messageService, Engine::DELAY);
+
         while (true) {
-            usleep(Engine::COOLDOWN);
+            usleep(Engine::DELAY);
 
-            $messages = $this->server->listen();
+            $events = $this->server->listen();
 
-            $responses = new Collection();
+            $responses = new ResponseCollection();
             foreach ($this->observers as $observer) {
-                $responses = $responses->merge($observer->update($messages));
+                $responses = $responses->merge($observer->update($events));
             }
 
-            foreach ($responses as $response) {
-                $this->messageService->send($response);
-                usleep(Engine::COOLDOWN);
-            }
+            $responder->respond($responses);
         }
     }
 }

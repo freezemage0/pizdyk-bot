@@ -5,6 +5,7 @@ namespace Freezemage\Pizdyk;
 
 use DomainException;
 use Freezemage\Pizdyk\Configuration\Api;
+use Freezemage\Pizdyk\Configuration\AreaOfEffect;
 use Freezemage\Pizdyk\Configuration\Assets;
 use Freezemage\Pizdyk\Configuration\Credentials;
 use JsonException;
@@ -72,6 +73,12 @@ final class Configuration
     public function getAssets(): Assets
     {
         $assets = $this->get('assets');
-        return new Assets($assets);
+        return new Assets($assets['generic'], $assets['aoe']);
+    }
+
+    public function getAreaOfEffect(): AreaOfEffect
+    {
+        $aoe = $this->get('aoe');
+        return new AreaOfEffect($aoe['maxProcCount'], $aoe['maxPeriod']);
     }
 }
