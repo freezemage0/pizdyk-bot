@@ -5,15 +5,17 @@ namespace Freezemage\Pizdyk\Output;
 
 class Response
 {
+    public const REPLY_TO_ALL = -1;
+
     public string $peerId;
     public array $attachments;
     public string $body;
-    public string $replyTag;
+    public string $replyTo;
 
-    public function __construct(string $peerId, string $replyTag, string $body, array $attachments)
+    public function __construct(string $peerId, string $replyTo, string $body, array $attachments)
     {
         $this->peerId = $peerId;
-        $this->replyTag = $replyTag;
+        $this->replyTo = $replyTo;
         $this->body = $body;
         $this->attachments = $attachments;
     }

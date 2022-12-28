@@ -54,7 +54,7 @@ final class Observer implements ObserverInterface
 
             $responses->push(new Response(
                     $message->peerId,
-                    "@id{$message->senderId}",
+                    $message->senderId,
                     implode("\n", $matches),
                     $this->getRandomGenericAsset()
             ));
@@ -64,7 +64,7 @@ final class Observer implements ObserverInterface
         foreach ($this->tracker->getExceedingPeers() as $peer) {
             $responses->push(new Response(
                     $peer,
-                    '@all',
+                    Response::REPLY_TO_ALL,
                     '',
                     [$this->configuration->getAssets()->aoe]
             ));

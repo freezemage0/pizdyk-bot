@@ -5,12 +5,14 @@ use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Observer;
 use Freezemage\Pizdyk\Configuration;
 use Freezemage\Pizdyk\Engine;
+use Freezemage\Pizdyk\Output\Responder;
 use Freezemage\Pizdyk\Vk\Client as VkClient;
 use Freezemage\Pizdyk\Vk\LongPoll\Client as LongPollClient;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Factory as EventFactory;
 use Freezemage\Pizdyk\Vk\LongPoll\Factory\Group;
 use Freezemage\Pizdyk\Vk\LongPoll\Listener;
-use Freezemage\Pizdyk\Vk\Message\Service;
+use Freezemage\Pizdyk\Vk\Message\Service as MessageService;
+use Freezemage\Pizdyk\Vk\User\Service as UserService;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
 
@@ -38,6 +40,6 @@ $server = new Listener(
         new LongPollClient($client, $factory, $factory, new EventFactory())
 );
 
-$engine = new Engine($server, new Service($vkClient));
+$engine = new Engine($server, new Responder(new MessageService($vkClient), new UserService($vkClient), Engine::DELAY));
 $engine->attach(new Observer($configuration, new Tracker($configuration->getAreaOfEffect())));
 $engine->run();
