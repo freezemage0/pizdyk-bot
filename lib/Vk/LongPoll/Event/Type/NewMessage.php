@@ -23,7 +23,7 @@ final class NewMessage implements Update, Filterable
         $this->version = $version;
     }
 
-    public function getEntity(): Updatable
+    public function getEntity(): Item
     {
         return $this->updatableItem;
     }

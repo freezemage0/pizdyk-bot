@@ -7,5 +7,9 @@ interface Update
 {
     public function getVersion(): string;
     public function getEventId(): string;
-    public function getEntity(): Updatable;
+
+    /**
+     * @return Updatable can be redefined in implementors.
+     */
+    public function getEntity();
 }
