@@ -63,7 +63,7 @@ final class Statistics implements Command
             $user = $users[$item->userId];
             $userName = "{$user->firstName} {$user->lastName}";
 
-            $result[] = "{$userName}: {$item->counter}";
+            $result[] = "{$userName}: {$item->counter} пиздыков";
         }
 
         return new Response(
