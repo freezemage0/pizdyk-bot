@@ -3,8 +3,10 @@
 
 namespace Freezemage\Pizdyk;
 
+use Freezemage\Pizdyk\Engine\EventType;
 use Freezemage\Pizdyk\Output\Responder;
 use Freezemage\Pizdyk\Output\Response\Collection as ResponseCollection;
+use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection;
 use Freezemage\Pizdyk\Vk\LongPoll\Listener;
 
 
@@ -12,7 +14,7 @@ final class Engine
 {
     public const DELAY = 250000;
     private Listener $server;
-    /** @var array<ObserverInterface> */
+    /** @var array{string: ObserverInterface[]} */
     private array $observers;
     private Responder $responder;
 

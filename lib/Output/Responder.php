@@ -29,16 +29,15 @@ class Responder
     public function respond(ResponseCollection $collection): void
     {
         foreach ($collection as $item) {
-            if ($item->replyTo == Response::REPLY_TO_ALL) {
-                $user = new User(Response::REPLY_TO_ALL, 'all');
-            } else {
-                $user = $this->getUser($item->replyTo);
+            if ($item->replyTo instanceof ReplyTarget\User) {
+                $user = $this->getUser($item->replyTo->getId());
+                $item->replyTo->setHandle($user->handle);
             }
 
             $item = new Item(
                     $item->peerId,
                     null,
-                    "{$user->getMentionTag()}\n{$item->body}",
+                    "{$item->replyTo->getMentionTag()}\n{$item->body}",
                     Item::DIRECTION_OUT,
                     time(),
                     $item->attachments

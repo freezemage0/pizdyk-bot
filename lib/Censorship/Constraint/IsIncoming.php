@@ -17,6 +17,6 @@ final class IsIncoming implements Constraint
             return false;
         }
 
-        return $item->getEntity()->direction == Item::DIRECTION_IN;
+        return $item->getItem()->direction == Item::DIRECTION_IN;
     }
 }

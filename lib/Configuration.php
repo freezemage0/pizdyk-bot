@@ -7,7 +7,10 @@ use DomainException;
 use Freezemage\Pizdyk\Configuration\Api;
 use Freezemage\Pizdyk\Configuration\AreaOfEffect;
 use Freezemage\Pizdyk\Configuration\Assets;
+use Freezemage\Pizdyk\Configuration\Assets\Audios;
+use Freezemage\Pizdyk\Configuration\Assets\Photos;
 use Freezemage\Pizdyk\Configuration\Credentials;
+use Freezemage\Pizdyk\Configuration\ForcedCensorship;
 use JsonException;
 use RuntimeException;
 
@@ -73,12 +76,27 @@ final class Configuration
     public function getAssets(): Assets
     {
         $assets = $this->get('assets');
-        return new Assets($assets['generic'], $assets['aoe']);
+
+        $photos = new Photos(
+                $assets['photos']['generic'],
+                $assets['photos']['aoe'],
+                $assets['photos']['forcedCensorship']
+        );
+        $audios = new Audios($assets['audios']['forcedCensorship']);
+
+        return new Assets($photos, $audios);
     }
 
     public function getAreaOfEffect(): AreaOfEffect
     {
-        $aoe = $this->get('aoe');
-        return new AreaOfEffect($aoe['maxProcCount'], $aoe['maxPeriod']);
+        $aoe = $this->get('modes');
+
+        return new AreaOfEffect($aoe['aoe']['options']['count'], $aoe['aoe']['options']['period']);
     }
+
+    public function getPrefixes(): array
+    {
+        return $this->get('prefixes');
+    }
+
 }

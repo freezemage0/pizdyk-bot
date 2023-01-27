@@ -24,6 +24,6 @@ final class IsNotIgnoredUser implements Constraint
             return false;
         }
 
-        return !in_array($item->getEntity()->senderId, $this->ignoredUsers);
+        return !in_array($item->getItem()->senderId, $this->ignoredUsers);
     }
 }

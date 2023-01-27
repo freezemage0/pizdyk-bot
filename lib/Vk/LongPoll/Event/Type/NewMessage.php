@@ -4,10 +4,8 @@
 namespace Freezemage\Pizdyk\Vk\LongPoll\Event\Type;
 
 use Freezemage\Pizdyk\Filter\Filterable;
-use Freezemage\Pizdyk\Vk\LongPoll\Event\Updatable;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Update;
 use Freezemage\Pizdyk\Vk\Message\Item;
-use UnexpectedValueException;
 
 
 final class NewMessage implements Update, Filterable
@@ -23,7 +21,7 @@ final class NewMessage implements Update, Filterable
         $this->version = $version;
     }
 
-    public function getEntity(): Item
+    public function getItem(): Item
     {
         return $this->updatableItem;
     }

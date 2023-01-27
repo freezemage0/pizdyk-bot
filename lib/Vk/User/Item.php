@@ -13,10 +13,4 @@ class Item
         $this->id = $id;
         $this->handle = $handle;
     }
-
-    public function getMentionTag(): string
-    {
-        $tag = $this->handle ?? "id{$this->id}";
-        return "@{$tag}";
-    }
 }

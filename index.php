@@ -3,6 +3,8 @@
 
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Observer;
+use Freezemage\Pizdyk\Command\Dump;
+use Freezemage\Pizdyk\Command\ForcedCensorship;
 use Freezemage\Pizdyk\Configuration;
 use Freezemage\Pizdyk\Engine;
 use Freezemage\Pizdyk\Output\Responder;
@@ -41,5 +43,20 @@ $server = new Listener(
 );
 
 $engine = new Engine($server, new Responder(new MessageService($vkClient), new UserService($vkClient), Engine::DELAY));
-$engine->attach(new Observer($configuration, new Tracker($configuration->getAreaOfEffect())));
+$engine->attach(new Observer(
+        $configuration,
+        new Tracker($configuration->getAreaOfEffect())
+));
+//$engine->attach(new BerserkObserver());
+
+$assets = $configuration->getAssets();
+$command = new \Freezemage\Pizdyk\Command\Observer(
+        $configuration->getPrefixes(),
+        [
+                new ForcedCensorship($assets->photos, $assets->audios),
+                new Dump($configuration)
+        ]
+);
+
+$engine->attach($command);
 $engine->run();

@@ -8,8 +8,11 @@ use Freezemage\Pizdyk\Censorship\Constraint\IsIncoming;
 use Freezemage\Pizdyk\Censorship\Constraint\IsNotIgnoredUser;
 use Freezemage\Pizdyk\Configuration;
 use Freezemage\Pizdyk\ObserverInterface;
+use Freezemage\Pizdyk\Output\ReplyTarget\All;
+use Freezemage\Pizdyk\Output\ReplyTarget\User;
 use Freezemage\Pizdyk\Output\Response;
 use Freezemage\Pizdyk\Output\Response\Collection as ResponseCollection;
+use Freezemage\Pizdyk\Utility\Random;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection as EventCollection;
 use Freezemage\Pizdyk\Vk\Message\Item;
 use RuntimeException;
@@ -36,7 +39,7 @@ final class Observer implements ObserverInterface
 
         $responses = new ResponseCollection();
         foreach ($collection as $item) {
-            $message = $item->getEntity();
+            $message = $item->getItem();
 
             if (!($message instanceof Item)) {
                 throw new RuntimeException('Unprocessable item.');
@@ -54,7 +57,7 @@ final class Observer implements ObserverInterface
 
             $responses->push(new Response(
                     $message->peerId,
-                    $message->senderId,
+                    new User($message->senderId),
                     implode("\n", $matches),
                     $this->getRandomGenericAsset()
             ));
@@ -64,9 +67,9 @@ final class Observer implements ObserverInterface
         foreach ($this->tracker->getExceedingPeers() as $peer) {
             $responses->push(new Response(
                     $peer,
-                    Response::REPLY_TO_ALL,
+                    new All(),
                     '',
-                    [$this->configuration->getAssets()->aoe]
+                    $this->configuration->getAssets()->photos->aoe
             ));
             $this->tracker->clear($peer);
         }
@@ -77,7 +80,8 @@ final class Observer implements ObserverInterface
     private function getRandomGenericAsset(): array
     {
         $assets = $this->configuration->getAssets();
-        $asset = $assets->generic[array_rand($assets->generic)];
+
+        $asset = Random::pick($assets->photos->generic);
         if (!is_array($asset)) {
             $asset = [$asset];
         }

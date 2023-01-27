@@ -10,9 +10,9 @@ class Response
     public string $peerId;
     public array $attachments;
     public string $body;
-    public string $replyTo;
+    public ReplyTarget $replyTo;
 
-    public function __construct(string $peerId, string $replyTo, string $body, array $attachments)
+    public function __construct(string $peerId, ReplyTarget $replyTo, string $body, array $attachments)
     {
         $this->peerId = $peerId;
         $this->replyTo = $replyTo;

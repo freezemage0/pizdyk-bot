@@ -24,8 +24,8 @@ final class HasMention implements Constraint
         }
 
         $prefixes = implode('|', $this->prefixes);
-        $pattern = "/^{$prefixes}\s+/";
+        $pattern = "/{$prefixes}\s+/ui";
 
-        return preg_match($pattern, $item->getEntity()->text);
+        return preg_match($pattern, $item->getItem()->text);
     }
 }
