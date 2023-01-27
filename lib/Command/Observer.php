@@ -57,7 +57,6 @@ final class Observer implements ObserverInterface
             /** @var NewMessage $event */
             $message = $event->getItem();
 
-            var_dump($message->text);
             if (preg_match($this->pattern, $message->text, $matches)) {
                 foreach ($this->commands as $command) {
                     if (empty($matches[$command->getName()])) {

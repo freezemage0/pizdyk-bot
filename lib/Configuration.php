@@ -99,4 +99,8 @@ final class Configuration
         return $this->get('prefixes');
     }
 
+    public function getDatabasePath(): string
+    {
+        return $this->get('dbpath');
+    }
 }

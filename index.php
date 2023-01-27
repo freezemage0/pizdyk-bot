@@ -3,11 +3,14 @@
 
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Observer;
-use Freezemage\Pizdyk\Command\Dump;
 use Freezemage\Pizdyk\Command\ForcedCensorship;
+use Freezemage\Pizdyk\Command\Statistics;
 use Freezemage\Pizdyk\Configuration;
 use Freezemage\Pizdyk\Engine;
 use Freezemage\Pizdyk\Output\Responder;
+use Freezemage\Pizdyk\Statistics\Facade as StatisticsFacade;
+use Freezemage\Pizdyk\Statistics\Repository as StatisticsRepository;
+use Freezemage\Pizdyk\Statistics\Top\Repository as StatisticsTopRepository;
 use Freezemage\Pizdyk\Vk\Client as VkClient;
 use Freezemage\Pizdyk\Vk\LongPoll\Client as LongPollClient;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Factory as EventFactory;
@@ -23,6 +26,8 @@ require __DIR__ . '/vendor/autoload.php';
 
 
 $configuration = new Configuration(__DIR__ . '/config.json');
+$driver = new SQLite3(getcwd() . $configuration->getDatabasePath());
+$statisticsFacade = new StatisticsFacade(new StatisticsRepository($driver), new StatisticsTopRepository($driver));
 
 $credentials = $configuration->getCredentials();
 
@@ -42,9 +47,12 @@ $server = new Listener(
         new LongPollClient($client, $factory, $factory, new EventFactory())
 );
 
-$engine = new Engine($server, new Responder(new MessageService($vkClient), new UserService($vkClient), Engine::DELAY));
+$userService = new UserService($vkClient);
+
+$engine = new Engine($server, new Responder(new MessageService($vkClient), $userService, Engine::DELAY));
 $engine->attach(new Observer(
         $configuration,
+        $statisticsFacade,
         new Tracker($configuration->getAreaOfEffect())
 ));
 //$engine->attach(new BerserkObserver());
@@ -53,8 +61,8 @@ $assets = $configuration->getAssets();
 $command = new \Freezemage\Pizdyk\Command\Observer(
         $configuration->getPrefixes(),
         [
-                new ForcedCensorship($assets->photos, $assets->audios),
-                new Dump($configuration)
+                new ForcedCensorship($assets->photos, $assets->audios, $statisticsFacade),
+                new Statistics($statisticsFacade, $userService)
         ]
 );
 

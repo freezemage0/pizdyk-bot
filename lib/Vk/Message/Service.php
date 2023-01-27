@@ -24,7 +24,6 @@ final class Service
         }
 
         if (isset($item->attachments)) {
-            var_dump($item->attachments);
             $message['attachment'] = implode(',', $item->attachments);
         }
 

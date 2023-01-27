@@ -7,8 +7,6 @@ namespace Freezemage\Pizdyk\Output;
 use Freezemage\Pizdyk\Output\Response\Collection as ResponseCollection;
 use Freezemage\Pizdyk\Vk\Message\Item;
 use Freezemage\Pizdyk\Vk\Message\Service as MessageService;
-use Freezemage\Pizdyk\Vk\User\All;
-use Freezemage\Pizdyk\Vk\User\Item as User;
 use Freezemage\Pizdyk\Vk\User\Service as UserService;
 
 
@@ -28,9 +26,17 @@ class Responder
 
     public function respond(ResponseCollection $collection): void
     {
+        $userIds = [];
         foreach ($collection as $item) {
             if ($item->replyTo instanceof ReplyTarget\User) {
-                $user = $this->getUser($item->replyTo->getId());
+                $userIds[] = $item->replyTo->getId();
+            }
+        }
+
+        $users = $this->userService->get(...$userIds);
+        foreach ($collection as $item) {
+            if ($item->replyTo instanceof ReplyTarget\User) {
+                $user = $users[$item->replyTo->getId()];
                 $item->replyTo->setHandle($user->handle);
             }
 
@@ -46,14 +52,5 @@ class Responder
             $this->messageService->send($item);
             usleep($this->delay);
         }
-    }
-
-    private function getUser(int $id): User
-    {
-        if (!isset($this->users[$id])) {
-            $this->users[$id] = $this->userService->get($id);
-        }
-
-        return $this->users[$id];
     }
 }

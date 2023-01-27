@@ -12,6 +12,11 @@ use Freezemage\Pizdyk\Output\ReplyTarget\All;
 use Freezemage\Pizdyk\Output\ReplyTarget\User;
 use Freezemage\Pizdyk\Output\Response;
 use Freezemage\Pizdyk\Output\Response\Collection as ResponseCollection;
+use Freezemage\Pizdyk\Statistics\Facade as StatisticsFacade;
+use Freezemage\Pizdyk\Statistics\Item as Statistic;
+use Freezemage\Pizdyk\Statistics\Repository as StatisticsRepository;
+use Freezemage\Pizdyk\Statistics\Top\Item as StatisticsTop;
+use Freezemage\Pizdyk\Statistics\Top\Repository as StatisticsTopRepository;
 use Freezemage\Pizdyk\Utility\Random;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection as EventCollection;
 use Freezemage\Pizdyk\Vk\Message\Item;
@@ -22,10 +27,15 @@ final class Observer implements ObserverInterface
 {
     private Configuration $configuration;
     private Tracker $tracker;
+    private StatisticsFacade $facade;
 
-    public function __construct(Configuration $configuration, Tracker $tracker)
-    {
+    public function __construct(
+            Configuration $configuration,
+            StatisticsFacade $facade,
+            Tracker $tracker
+    ) {
         $this->configuration = $configuration;
+        $this->facade = $facade;
         $this->tracker = $tracker;
     }
 
@@ -61,17 +71,30 @@ final class Observer implements ObserverInterface
                     implode("\n", $matches),
                     $this->getRandomGenericAsset()
             ));
+            $this->facade->trackUser($message->peerId, $message->senderId);
+
             $this->tracker->push($message);
         }
 
+        $exceedingPeersCount = [];
         foreach ($this->tracker->getExceedingPeers() as $peer) {
+            if (empty($exceedingPeersCount[$peer])) {
+                $exceedingPeersCount[$peer] = 0;
+            }
+
+            $exceedingPeersCount[$peer] += 1;
             $responses->push(new Response(
                     $peer,
                     new All(),
                     '',
                     $this->configuration->getAssets()->photos->aoe
             ));
+
             $this->tracker->clear($peer);
+        }
+
+        foreach ($exceedingPeersCount as $peerId => $counter) {
+            $this->facade->track($peerId, 'Срабатываний АОЕ', $counter);
         }
 
         return $responses;
