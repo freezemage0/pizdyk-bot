@@ -56,6 +56,7 @@ $engine = new Engine($server, new Responder(new MessageService($vkClient), $user
 $engine->attach(new Observer(
         $configuration,
         $statisticsFacade,
+        new Spoofchecker(),
         new Tracker($configuration->getAreaOfEffect())
 ));
 //$engine->attach(new BerserkObserver());

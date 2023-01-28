@@ -3,6 +3,7 @@
 
 namespace Freezemage\Pizdyk\Censorship;
 
+
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Constraint\IsIncoming;
 use Freezemage\Pizdyk\Censorship\Constraint\IsNotIgnoredUser;
@@ -17,22 +18,26 @@ use Freezemage\Pizdyk\Utility\Random;
 use Freezemage\Pizdyk\Vk\LongPoll\Event\Collection as EventCollection;
 use Freezemage\Pizdyk\Vk\Message\Item;
 use RuntimeException;
+use Spoofchecker;
 
 
 final class Observer implements ObserverInterface
 {
     private Configuration $configuration;
     private Tracker $tracker;
+    private Spoofchecker $spoofchecker;
     private StatisticsFacade $facade;
 
     public function __construct(
             Configuration $configuration,
             StatisticsFacade $facade,
+            Spoofchecker $spoofchecker,
             Tracker $tracker
     ) {
         $this->configuration = $configuration;
         $this->facade = $facade;
         $this->tracker = $tracker;
+        $this->spoofchecker = $spoofchecker;
     }
 
     public function update(EventCollection $collection): ResponseCollection
@@ -55,21 +60,37 @@ final class Observer implements ObserverInterface
                 continue;
             }
 
-            if (!preg_match_all("/\S*({$rules})\S*/iu", $message->text, $matches)) {
-                continue;
+            if (preg_match_all("/\S*({$rules})\S*/iu", $message->text, $matches)) {
+                $matches = array_map(fn(string $match): string => "> {$match}", $matches[0]);
+
+                $responses->push(
+                        new Response(
+                                $message->peerId,
+                                new User($message->senderId),
+                                implode("\n", $matches),
+                                $this->getRandomGenericAsset()
+                        )
+                );
+                $this->facade->trackUser($message->peerId, $message->senderId);
+
+                $this->tracker->push($message);
+            } else {
+                $words = preg_split('/\s+/', $message->text);
+
+                $sus = array_filter($words, $this->spoofchecker->isSuspicious(...));
+                if (!empty($sus)) {
+                    $sus = array_map(fn(string $word): string => "> {$word}", $sus);
+                    $sus[] = "Подозрительно...";
+
+                    $responses->push(
+                            new Response(
+                                    $message->peerId,
+                                    new User($message->senderId),
+                                    implode("\n", $sus)
+                            )
+                    );
+                }
             }
-
-            $matches = array_map(fn (string $match): string => "> {$match}", $matches[0]);
-
-            $responses->push(new Response(
-                    $message->peerId,
-                    new User($message->senderId),
-                    implode("\n", $matches),
-                    $this->getRandomGenericAsset()
-            ));
-            $this->facade->trackUser($message->peerId, $message->senderId);
-
-            $this->tracker->push($message);
         }
 
         $exceedingPeersCount = [];
@@ -79,12 +100,14 @@ final class Observer implements ObserverInterface
             }
 
             $exceedingPeersCount[$peer] += 1;
-            $responses->push(new Response(
-                    $peer,
-                    new All(),
-                    '',
-                    $this->configuration->getAssets()->photos->aoe
-            ));
+            $responses->push(
+                    new Response(
+                            $peer,
+                            new All(),
+                            '',
+                            $this->configuration->getAssets()->photos->aoe
+                    )
+            );
 
             $this->tracker->clear($peer);
         }
