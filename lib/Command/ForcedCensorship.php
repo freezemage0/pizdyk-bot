@@ -73,12 +73,8 @@ final class ForcedCensorship implements Command
         $this->statisticsFacade->track($message->peerId, "Пиздыков выдано лично сержантами");
 
         if (preg_match('/\[id(.*)\|.+\]/', $arguments['target'], $matches)) {
-            $userId = $matches[1];
-
-            if (is_numeric($userId)) {
-                $userId = (int) $userId;
-                $this->statisticsFacade->trackUser($message->peerId, $userId);
-            }
+            $userId = (int) $matches[1];
+            $this->statisticsFacade->trackUser($message->peerId, $userId);
         }
 
         return new Response(

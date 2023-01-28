@@ -1,8 +1,10 @@
 <?php
 
 
+use Freezemage\Pizdyk\Blacklist\Storage as BlacklistStorage;
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Observer;
+use Freezemage\Pizdyk\Command\Blacklist;
 use Freezemage\Pizdyk\Command\ForcedCensorship;
 use Freezemage\Pizdyk\Command\Help;
 use Freezemage\Pizdyk\Command\Observer as CommandObserver;
@@ -31,6 +33,7 @@ require __DIR__ . '/vendor/autoload.php';
 $configuration = new Configuration(__DIR__ . '/config.json');
 $driver = new SQLite3(getcwd() . $configuration->getDatabasePath());
 $statisticsFacade = new StatisticsFacade(new StatisticsRepository($driver), new StatisticsTopRepository($driver));
+$blacklistStorage = new BlacklistStorage();
 
 $credentials = $configuration->getCredentials();
 
@@ -54,6 +57,7 @@ $userService = new UserService($vkClient);
 
 $engine = new Engine($server, new Responder(new MessageService($vkClient), $userService, Engine::DELAY));
 $engine->attach(new Observer(
+        $blacklistStorage,
         $configuration,
         $statisticsFacade,
         new Spoofchecker(),
@@ -65,7 +69,8 @@ $assets = $configuration->getAssets();
 $commands = [
         new ForcedCensorship($assets->photos, $assets->audios, $configuration->getForce(), $statisticsFacade),
         new Statistics($statisticsFacade, $userService),
-        new UltimateCensorship($statisticsFacade, $configuration)
+        new UltimateCensorship($statisticsFacade, $configuration),
+        new Blacklist($blacklistStorage, $userService, $configuration->getBlacklist())
 ];
 
 $help = new Help($configuration->getPrefixes(), $commands);

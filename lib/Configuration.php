@@ -9,6 +9,7 @@ use Freezemage\Pizdyk\Configuration\AreaOfEffect;
 use Freezemage\Pizdyk\Configuration\Assets;
 use Freezemage\Pizdyk\Configuration\Assets\Audios;
 use Freezemage\Pizdyk\Configuration\Assets\Photos;
+use Freezemage\Pizdyk\Configuration\Blacklist;
 use Freezemage\Pizdyk\Configuration\Credentials;
 use Freezemage\Pizdyk\Configuration\Force;
 use Freezemage\Pizdyk\Configuration\Ultimate;
@@ -121,5 +122,11 @@ final class Configuration
     {
         $modes = $this->get('modes');
         return new Force($modes['force']['options']['canBeUsedBy']);
+    }
+
+    public function getBlacklist(): Blacklist
+    {
+        $modes = $this->get('modes');
+        return new Blacklist($modes['blacklist']['options']['canBeUsedBy']);
     }
 }

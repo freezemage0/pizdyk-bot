@@ -37,14 +37,14 @@ final class Observer implements ObserverInterface
             foreach ($this->commands as $command) {
                 $arguments = [];
                 foreach ($command->getArguments() as $name => $pattern) {
-                    $arguments[] = "(?<{$name}>{$pattern})";
+                    $arguments[] = "(?<{$name}>{$pattern})?";
                 }
 
                 $aliases = implode('|', $command->getAliases());
                 $commandPattern = "(?<{$command->getName()}>{$aliases})";
 
                 if (!empty($arguments)) {
-                    $commandPattern .= '\s+' . implode('\s+', $arguments);
+                    $commandPattern .= '\s+' . implode('', $arguments);
                 }
                 $commandsPattern[] = '(' . $commandPattern . ')';
             }
@@ -69,6 +69,10 @@ final class Observer implements ObserverInterface
                             fn (string $name): bool => in_array($name, $argumentNames),
                             ARRAY_FILTER_USE_KEY
                     );
+
+                    foreach ($arguments as $name => $argument) {
+                        $arguments[$name] = trim($argument);
+                    }
 
                     $r = $command->process($message, $arguments);
                     if (!empty($r)) {

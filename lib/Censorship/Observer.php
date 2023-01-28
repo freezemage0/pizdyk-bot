@@ -4,6 +4,7 @@
 namespace Freezemage\Pizdyk\Censorship;
 
 
+use Freezemage\Pizdyk\Blacklist\Storage as BlacklistStorage;
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Constraint\IsIncoming;
 use Freezemage\Pizdyk\Censorship\Constraint\IsNotIgnoredUser;
@@ -23,12 +24,14 @@ use Spoofchecker;
 
 final class Observer implements ObserverInterface
 {
+    private BlacklistStorage $blacklistStorage;
     private Configuration $configuration;
     private Tracker $tracker;
     private Spoofchecker $spoofchecker;
     private StatisticsFacade $facade;
 
     public function __construct(
+            BlacklistStorage $blacklistStorage,
             Configuration $configuration,
             StatisticsFacade $facade,
             Spoofchecker $spoofchecker,
@@ -38,6 +41,7 @@ final class Observer implements ObserverInterface
         $this->facade = $facade;
         $this->tracker = $tracker;
         $this->spoofchecker = $spoofchecker;
+        $this->blacklistStorage = $blacklistStorage;
     }
 
     public function update(EventCollection $collection): ResponseCollection
@@ -54,6 +58,10 @@ final class Observer implements ObserverInterface
 
             if (!($message instanceof Item)) {
                 throw new RuntimeException('Unprocessable item.');
+            }
+
+            if ($this->blacklistStorage->has($message->peerId, $message->senderId)) {
+                continue;
             }
 
             if (!isset($message->text)) {

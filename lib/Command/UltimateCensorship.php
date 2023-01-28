@@ -52,10 +52,10 @@ final class UltimateCensorship implements Command
 
             $replyTo = new MentionedEntity($arguments['target']);
             $this->statisticsFacade->track($message->peerId, "Прожато ультов");
-            $targetId = $replyTo->getId();
 
-            if (str_starts_with($targetId, 'id')) {
-                $this->statisticsFacade->trackUser($message->peerId, $targetId);
+            if (preg_match('/\[id(.*)\|.+\]/', $arguments['target'], $matches)) {
+                $userId = (int) $matches[1];
+                $this->statisticsFacade->trackUser($message->peerId, $userId);
             }
 
             return new Response(
