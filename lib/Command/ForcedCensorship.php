@@ -6,14 +6,11 @@ namespace Freezemage\Pizdyk\Command;
 use Freezemage\Pizdyk\Command;
 use Freezemage\Pizdyk\Configuration\Assets\Audios;
 use Freezemage\Pizdyk\Configuration\Assets\Photos;
+use Freezemage\Pizdyk\Configuration\Force;
 use Freezemage\Pizdyk\Output\ReplyTarget\MentionedEntity;
 use Freezemage\Pizdyk\Output\ReplyTarget\User;
 use Freezemage\Pizdyk\Output\Response;
 use Freezemage\Pizdyk\Statistics\Facade as StatisticsFacade;
-use Freezemage\Pizdyk\Statistics\Item;
-use Freezemage\Pizdyk\Statistics\Repository as StatisticsRepository;
-use Freezemage\Pizdyk\Statistics\Top\Item as StatisticsTop;
-use Freezemage\Pizdyk\Statistics\Top\Repository as StatisticsTopRepository;
 use Freezemage\Pizdyk\Utility\Random;
 use Freezemage\Pizdyk\Vk\Message\Item as Message;
 
@@ -23,12 +20,14 @@ final class ForcedCensorship implements Command
     private Photos $photos;
     private Audios $audios;
     private StatisticsFacade $statisticsFacade;
+    private Force $force;
 
-    public function __construct(Photos $photos, Audios $audios, StatisticsFacade $statisticsFacade)
+    public function __construct(Photos $photos, Audios $audios, Force $force, StatisticsFacade $statisticsFacade)
     {
         $this->photos = $photos;
         $this->audios = $audios;
         $this->statisticsFacade = $statisticsFacade;
+        $this->force = $force;
     }
 
     public function getName(): string
@@ -47,8 +46,16 @@ final class ForcedCensorship implements Command
             return new Response(
                     $message->peerId,
                     new User($message->senderId),
-                    "Кому пиздык-то вломить?",
-                    []
+                    "Кому пиздык-то вломить?"
+            );
+        }
+
+        $constraint = new Command\Constraint\CanBeUsed($this->force->canBeUsedBy);
+        if (!$constraint->evaluate($message)) {
+            return new Response(
+                    $message->peerId,
+                    new User($message->senderId),
+                    "Ты меня не заставишь"
             );
         }
 
@@ -61,6 +68,7 @@ final class ForcedCensorship implements Command
         if (!is_array($audio)) {
             $audio = [$audio];
         }
+        $assets = array_merge($photo, $audio);
 
         $this->statisticsFacade->track($message->peerId, "Пиздыков выдано лично сержантами");
 
@@ -77,13 +85,13 @@ final class ForcedCensorship implements Command
                 $message->peerId,
                 new MentionedEntity($arguments['target']),
                 '',
-                array_merge($photo, $audio)
+                $assets
         );
     }
 
     public function getDescription(): string
     {
-        return 'Forced censorship.';
+        return 'Персональный сержантский пиздык.';
     }
 
     public function getArguments(): array

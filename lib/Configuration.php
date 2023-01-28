@@ -10,7 +10,8 @@ use Freezemage\Pizdyk\Configuration\Assets;
 use Freezemage\Pizdyk\Configuration\Assets\Audios;
 use Freezemage\Pizdyk\Configuration\Assets\Photos;
 use Freezemage\Pizdyk\Configuration\Credentials;
-use Freezemage\Pizdyk\Configuration\ForcedCensorship;
+use Freezemage\Pizdyk\Configuration\Force;
+use Freezemage\Pizdyk\Configuration\Ultimate;
 use JsonException;
 use RuntimeException;
 
@@ -102,5 +103,23 @@ final class Configuration
     public function getDatabasePath(): string
     {
         return $this->get('dbpath');
+    }
+
+    /**
+     * @return Ultimate[]
+     */
+    public function getUltimates(): array
+    {
+        $modes = $this->get('modes');
+        return array_map(
+                fn (array $ult): Ultimate => new Ultimate($ult['userId'], $ult['description'], $ult['assets']),
+                $modes['ultimate']['options']['ultimates']
+        );
+    }
+
+    public function getForce(): Force
+    {
+        $modes = $this->get('modes');
+        return new Force($modes['force']['options']['canBeUsedBy']);
     }
 }

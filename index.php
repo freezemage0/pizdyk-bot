@@ -4,7 +4,10 @@
 use Freezemage\Pizdyk\Censorship\AreaOfEffect\Tracker;
 use Freezemage\Pizdyk\Censorship\Observer;
 use Freezemage\Pizdyk\Command\ForcedCensorship;
+use Freezemage\Pizdyk\Command\Help;
+use Freezemage\Pizdyk\Command\Observer as CommandObserver;
 use Freezemage\Pizdyk\Command\Statistics;
+use Freezemage\Pizdyk\Command\UltimateCensorship;
 use Freezemage\Pizdyk\Configuration;
 use Freezemage\Pizdyk\Engine;
 use Freezemage\Pizdyk\Output\Responder;
@@ -58,13 +61,16 @@ $engine->attach(new Observer(
 //$engine->attach(new BerserkObserver());
 
 $assets = $configuration->getAssets();
-$command = new \Freezemage\Pizdyk\Command\Observer(
-        $configuration->getPrefixes(),
-        [
-                new ForcedCensorship($assets->photos, $assets->audios, $statisticsFacade),
-                new Statistics($statisticsFacade, $userService)
-        ]
-);
+$commands = [
+        new ForcedCensorship($assets->photos, $assets->audios, $configuration->getForce(), $statisticsFacade),
+        new Statistics($statisticsFacade, $userService),
+        new UltimateCensorship($statisticsFacade, $configuration)
+];
+
+$help = new Help($configuration->getPrefixes(), $commands);
+$commands[] = $help;
+
+$command = new CommandObserver($configuration->getPrefixes(), $commands);
 
 $engine->attach($command);
 $engine->run();

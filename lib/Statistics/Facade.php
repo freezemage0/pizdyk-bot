@@ -21,13 +21,13 @@ final class Facade
 
     public function track(int $peerId, string $name, int $count = 1): void
     {
-        $stat = $this->Repository->findByName($peerId, $name);
+        $stat = $this->repository->findByName($peerId, $name);
         if (empty($stat)) {
             $stat = new Item(null, $peerId, $name, $count);
             $this->repository->add($stat);
         } else {
             $stat->counter += $count;
-            $this->topRepository->update($stat);
+            $this->repository->update($stat);
         }
     }
 
